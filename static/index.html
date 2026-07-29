@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>Clearpost</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260729d" />
+</head>
+<body>
+  <div class="app">
+    <header class="top-band">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div class="brand-text">
+          <strong>Clearpost</strong>
+          <span class="brand-sub">Invoice intake · review · export</span>
+        </div>
+      </div>
+      <nav class="top-actions">
+        <button type="button" class="btn pill" id="btn-export-technical">Technical summary</button>
+        <button type="button" class="btn pill" id="btn-export-readable">Readable summary</button>
+        <button type="button" class="btn pill mode-btn active" data-mode="records" id="btn-mode-records">Records</button>
+        <button type="button" class="btn pill mode-btn" data-mode="review" id="btn-mode-review">Review all</button>
+      </nav>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <h2>File log</h2>
+          <span class="sidebar-count" id="sidebar-count">0</span>
+        </div>
+        <div class="sidebar-list" id="sidebar-list"></div>
+        <div class="sidebar-foot">
+          <button type="button" class="btn-settings" id="btn-settings" title="Settings" aria-label="Settings">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v2.5M12 20.5V23M4.2 4.2l1.8 1.8M18 18l1.8 1.8M1 12h2.5M20.5 12H23M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/>
+            </svg>
+            <span>Settings</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="main-panel active" id="panel-workspace">
+          <div class="upload-bar box" id="dropzone" role="button" tabindex="0" aria-label="Upload a file">
+            <div class="upload-bar-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 16V4"/>
+                <path d="M7 9l5-5 5 5"/>
+                <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+              </svg>
+            </div>
+            <div class="upload-bar-text">
+              <span class="upload-bar-title">Drop a file here, or click to choose</span>
+              <span class="upload-bar-hint muted">PDF · images · Word · Excel · CSV · TXT</span>
+            </div>
+            <span class="btn pill upload-bar-cta">Choose file</span>
+            <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp,.docx,.txt,.csv,.xlsx,application/pdf,image/*,text/plain,text/csv" hidden />
+          </div>
+          <p id="upload-status" class="status-msg upload-status"></p>
+
+          <div class="content-box box" id="content-box" data-state="empty">
+            <div id="content-empty" class="empty-state">
+              <p id="empty-message">Select a file from the log to preview and inspect extraction.</p>
+            </div>
+
+            <div id="content-view" class="content-view">
+              <div class="content-toolbar">
+                <div class="content-toolbar-text">
+                  <h3 id="content-title">—</h3>
+                  <p class="content-meta" id="content-meta"></p>
+                </div>
+                <div class="content-toolbar-actions">
+                  <button type="button" class="btn primary" id="btn-edit-selected">Edit in review</button>
+                </div>
+              </div>
+
+              <!-- Two panes only: left = file preview, right = fields OR edit form (no third overflowing strip) -->
+              <div class="content-split" id="content-split">
+                <div class="preview-pane box-inner">
+                  <div class="preview-frame-host" id="preview-host">
+                    <iframe id="preview-frame" title="Document preview" hidden></iframe>
+                    <img id="preview-image" alt="Document preview" hidden />
+                    <div id="preview-fallback" class="preview-fallback" hidden></div>
+                  </div>
+                </div>
+                <div class="detail-pane box-inner" id="detail-pane"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="main-panel" id="panel-settings">
+          <div class="settings-box box">
+            <h2>Settings</h2>
+            <p class="muted">Appearance and pipeline engines.</p>
+
+            <div class="settings-section box-inner">
+              <h3>Appearance</h3>
+              <div class="theme-row">
+                <span>Theme</span>
+                <div class="theme-toggle" role="group" aria-label="Theme">
+                  <button type="button" class="btn pill" data-theme-set="light" id="theme-light">Light</button>
+                  <button type="button" class="btn pill" data-theme-set="dark" id="theme-dark">Dark</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section box-inner">
+              <h3>Language model</h3>
+              <dl class="status-grid" id="llm-status">
+                <div><dt>Status</dt><dd id="llm-online">…</dd></div>
+                <div><dt>Provider</dt><dd id="llm-provider">…</dd></div>
+                <div><dt>Model</dt><dd id="llm-model">…</dd></div>
+                <div><dt>Endpoint</dt><dd id="llm-url" class="mono">…</dd></div>
+              </dl>
+              <p class="status-extra" id="llm-error"></p>
+              <button type="button" class="btn" id="btn-refresh-status">Refresh status</button>
+            </div>
+
+            <div class="settings-section box-inner">
+              <h3>OCR</h3>
+              <dl class="status-grid" id="ocr-status">
+                <div><dt>Engine</dt><dd id="ocr-engine">…</dd></div>
+                <div><dt>License</dt><dd id="ocr-license">…</dd></div>
+                <div class="full"><dt>Notes</dt><dd id="ocr-notes">…</dd></div>
+              </dl>
+            </div>
+
+            <div class="settings-section box-inner">
+              <h3>Accepted file types</h3>
+              <p id="allowed-types" class="type-chips"></p>
+            </div>
+
+            <button type="button" class="btn" id="btn-back-workspace">Back to workspace</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="/static/app.js?v=20260729d"></script>
+</body>
+</html>
